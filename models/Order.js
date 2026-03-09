@@ -77,8 +77,7 @@ const orderSchema = new mongoose.Schema({
     deliveredAt: Date,
 
     //Suivi
-    notes: { String },
-    timestamps: true
+    notes: { String }
 
 });
 

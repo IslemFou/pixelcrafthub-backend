@@ -2,7 +2,11 @@ const mongoose = require('mongoose');
 
 const productSchema = new mongoose.Schema({
     nom: { type: String, required: true },
-    vendor: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    vendor: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    },
     prix: { type: Number, required: true },
     categorie: {
         type: String,
@@ -15,7 +19,10 @@ const productSchema = new mongoose.Schema({
     stock: { type: Number, default: 0 },
     eco: { type: Boolean, default: false },
     bestseller: { type: Boolean, default: false },
-    new: { type: Boolean, default: false },
-}
-);
-module.exports = mongoose.model('Product', productSchema);
+    new: { type: Boolean, default: false }
+}, {
+    timestamps: true
+});
+
+//  retourne le modèle SANS jamais recompiler
+module.exports = mongoose.models.Product || mongoose.model('Product', productSchema);

@@ -19,11 +19,21 @@ const app = express(); //création du server express
 app.use(cors()); // Autorise React (port 3000) et API Node.js (port 5000) à communiquer entre eux
 app.use(express.json()); // Transforme JSON des requêtes POST en objet JS 
 
-//-------- Routes produits
+//-------- Routes 
+const authRoutes = require('./routes/auth');
+const dashboardRoutes = require('./routes/dashboard');
+const orderRoutes = require('./routes/orders');
+const quoteRoutes = require('./routes/quotes');
+const userRoutes = require('./routes/users');
 const productRoutes = require('./routes/products');
 app.use('/api/products', productRoutes);  // Préfixe automatique !
 const serviceRoutes = require('./routes/services');
 app.use('/api/services', serviceRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/orders', orderRoutes);
+app.use('/api/quotes', quoteRoutes);
+app.use('/api/users', userRoutes);
 
 //Mongo DB connection
 mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/clusterluxe')
