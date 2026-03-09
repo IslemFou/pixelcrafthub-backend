@@ -50,13 +50,34 @@ const getProductById = async (req, res) => {
 // @route   POST /api/products
 // @access  Privé - Vendor uniquement
 const createProduct = async (req, res) => {
-    const product = await Product.create(req.body);
+    try {
+        // ✅ 1. VÉRIFIER que c'est un VENDOR
+        if (!req.user.roles.includes('vendor')) {
+            return res.status(403).json({
+                success: false,
+                message: 'Seuls les vendeurs peuvent créer des produits'
+            });
+        }
 
-    res.status(201).json({
-        success: true,
-        product
-    });
-}
+        // ✅ 2. AUTO-ASSIGNER le vendor connecté
+        req.body.vendor = req.user._id;
+
+        // ✅ 3. Créer le produit
+        const product = await Product.create(req.body);
+
+        res.status(201).json({
+            success: true,
+            product
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
 
 // PUT modifier un produit
 const updateProduct = async (req, res) => {
