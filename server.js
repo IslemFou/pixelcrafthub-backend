@@ -20,12 +20,12 @@ app.use(cors()); // Autorise React (port 3000) et API Node.js (port 5000) à com
 app.use(express.json()); // Transforme JSON des requêtes POST en objet JS 
 
 //-------- Routes 
-const authRoutes = require('./routes/auth');
-const dashboardRoutes = require('./routes/dashboard');
-const orderRoutes = require('./routes/orders');
-const quoteRoutes = require('./routes/quotes');
-const userRoutes = require('./routes/users');
-const productRoutes = require('./routes/products');
+const authRoutes = require('./routes/auth.js');
+const dashboardRoutes = require('./routes/dashboard.js');
+const orderRoutes = require('./routes/orders.js');
+const quoteRoutes = require('./routes/quotes.js');
+const userRoutes = require('./routes/users.js');
+const productRoutes = require('./routes/products.js');
 app.use('/api/products', productRoutes);  // Préfixe automatique !
 const serviceRoutes = require('./routes/services');
 app.use('/api/services', serviceRoutes);

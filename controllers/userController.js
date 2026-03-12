@@ -1,4 +1,36 @@
-const User = require('../models/User');
+const User = require('../models/User.js');
+
+/**
+ * Create a new user
+ * @param {Object} req.body - The user data to create the new user
+ * @returns {Object} - The newly created user
+ */
+exports.createUser = async (req, res) => {
+    try {
+        // Create a new user
+        const newUser = new User(req.body);
+        const { email } = newUser;
+
+        // Check if the user already exists
+        const userExist = await User.findOne({ email })
+
+        if (userExist) {
+            // If the user already exists, return a bad request response
+            return res.status(400).json({ message: "User already exists." })
+        }
+
+        // Save the new user to the database
+        const saveData = await newUser.save();
+        // Return the newly created user
+        res.status(200).json(saveData);
+    } catch (error) {
+        // If an error occurs, return an internal server error response
+        res.status(500).json({ message: error.message });
+    }
+}
+
+
+
 // @desc    Récupérer tous les utilisateurs (admin uniquement)
 // @route   GET /api/users
 // @access  Privé - Admin
