@@ -1,5 +1,5 @@
 const User = require('../models/User.js');
-
+const crypto = require('crypto');
 /**
  * Create a new user
  * @param {Object} req.body - The user data to create the new user
@@ -29,7 +29,40 @@ exports.createUser = async (req, res) => {
     }
 }
 
-
+// create GuestUser
+exports.createGuestUser = async (req, res) => {
+    console.log('createGuestUser called');
+    try {
+        const randomSuffix = crypto.randomBytes(4).toString('hex');
+        const guest = await User.create({
+            // name: `Guest-${randomSuffix}`,
+            // email: `guest_${randomSuffix}@test.com`,
+            // password: 'guestpassword123',
+            // role: 'guest',
+            nom: 'Guest',
+            prenom: 'Test',
+            telephone: '0000000000',
+            name: 'Guest Test', // si tu as aussi ce champ
+            email: `guest_${Date.now()}@example.com`,
+            password: 'test1234',
+            role: 'guest',
+            isVerified: false
+        });
+        // pour ne pas renvoyer le password
+        guest.password = undefined;
+        //
+        res.status(201).json({
+            success: true,
+            data: guest
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Erreur création utilisateur invité',
+            error: error.message
+        });
+    }
+}
 
 // @desc    Récupérer tous les utilisateurs (admin uniquement)
 // @route   GET /api/users

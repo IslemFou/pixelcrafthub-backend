@@ -5,13 +5,18 @@ const {
     updateUser,
     verifyUser,
     deleteUser,
-    getUserById
+    getUserById,
+    createGuestUser
 } = require('../controllers/userController.js');
 const { protect, authorize } = require('../middleware/auth.js');
 
 const router = express.Router();
 
-//Toutes les routes Admin
+// ===== Route publique : création d'utilisateur invité / test =====
+router.post('/guest', createGuestUser);
+
+
+// ===== Routes Admin protégées =====
 router.use(protect);
 router.use(authorize('admin'));
 

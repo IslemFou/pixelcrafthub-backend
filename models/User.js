@@ -15,15 +15,28 @@ const userSchema = new mongoose.Schema({
         required: [true, 'Mot de passe requis'],
         minlength: 6
     },
-    nom: { type: String, required: true },
-    prenom: { type: String, required: true },
-    telephone: { type: String, required: true },
+    nom: {
+        type: String,
+        required: function () {
+            return this.role !== 'guest';
+        }
+    },
+    prenom: {
+        type: String, required: function () {
+            return this.role !== 'guest';
+        }
+    },
+    telephone: {
+        type: String, required: function () {
+            return this.role !== 'guest';
+        }
+    },
 
     // 👉 NOUVEAU : Rôles marketplace
     roles: [{
         type: String,
-        enum: ['client', 'vendor', 'provider', 'admin'],
-        default: ['client']
+        enum: ['client', 'vendor', 'provider', 'admin', 'guest'],
+        default: ['guest']
     }],
 
     // 👉 NOUVEAU : Infos pro (vendeurs/prestataires)
@@ -46,10 +59,10 @@ const userSchema = new mongoose.Schema({
 });
 
 // Hash password avant sauvegarde
-userSchema.pre('save', async function (next) {
-    if (!this.isModified('password')) return next();
+userSchema.pre('save', async function () {
+    if (!this.isModified('password')) return;
     this.password = await bcrypt.hash(this.password, 12);
-    next();
+    ;
 });
 
 module.exports = mongoose.model('User', userSchema);
