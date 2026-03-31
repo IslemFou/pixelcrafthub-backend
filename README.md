@@ -1,5 +1,4 @@
-PixelCraftHub Backend
-[ [ [ [
+**PixelCraftHub Backend**
 
 Backend API pour PixelCraftHub, marketplace freelance pour services Design/UI/UX et Web Development.
 Construit avec MERN stack (MongoDB, Express, React, Node.js). Gère authentification, profils, missions, messagerie temps réel et paiements.
