@@ -4,6 +4,7 @@ const express = require('express');
 const cors = require('cors');
 // permet de partager des ressources entre plusieurs origines différentes, Autorise React (port 3000) et API Node.js (port 5000) à communiquer entre eux 
 const mongoose = require('mongoose');
+console.log("Version de Mongoose :", mongoose.version);
 // Librairie de gestion de base de données NoSQL pour Node.js
 const dotenv = require('dotenv');
 // permet de charger des variables d'environnement depuis un fichier .env
@@ -36,11 +37,11 @@ app.use('/api/quotes', quoteRoutes);
 app.use('/api/users', userRoutes);
 
 //Mongo DB connection
-mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/clusterluxe')
-    .then(() => console.log('✅ MongoDB connecté'))
+mongoose.connect(process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/pixelch')
+    .then(() => console.log('✅ MongoDB pixelch connecté'))
     .catch(err => {
         console.log('❌ MongoDB', err);
-        console.log('⚠️ Assurez-vous que MongoDB tourne sur localhost:27017 ou définissez MONGO_URI dans .env');
+        console.log('⚠️ Assurez-vous que MongoDB tourne sur 127.0.0.1:27017 ou définissez MONGO_URI dans .env');
     });
 
 

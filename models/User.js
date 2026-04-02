@@ -32,19 +32,20 @@ const userSchema = new mongoose.Schema({
         }
     },
 
-    // 👉 NOUVEAU : Rôles marketplace
+    // roles
     roles: [{
         type: String,
-        enum: ['client', 'vendor', 'provider', 'admin', 'guest'],
+        enum: ['client', 'prestataire', 'admin', 'guest'],
         default: ['guest']
     }],
 
-    // 👉 NOUVEAU : Infos pro (vendeurs/prestataires)
+    //  Infos pro (prestataires)
     companyName: { type: String },
     siret: {
         type: String,
         match: [/^[0-9]{14}$/, 'SIRET invalide'],
-        unique: true
+        unique: true,
+        sparse: true //Permet d'avoir plusieurs utilisateurs sans SIRET
     },
     address: String,
     city: String,
