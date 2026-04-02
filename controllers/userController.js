@@ -35,27 +35,26 @@ exports.createGuestUser = async (req, res) => {
     try {
         const randomSuffix = crypto.randomBytes(4).toString('hex');
         const guest = await User.create({
-            // name: `Guest-${randomSuffix}`,
-            // email: `guest_${randomSuffix}@test.com`,
-            // password: 'guestpassword123',
-            // role: 'guest',
-            nom: 'Guest',
-            prenom: 'Test',
-            telephone: '0000000000',
-            name: 'Guest Test', // si tu as aussi ce champ
-            email: `guest_${Date.now()}@example.com`,
+            nom: `Guest-${randomSuffix}`,
+            prenom: randomSuffix,
+            email: `guest_${Date.now()}@pixelcrafthub.com`,
             password: 'test1234',
-            role: 'guest',
+            roles: ['guest'],
             isVerified: false
         });
-        // pour ne pas renvoyer le password
-        guest.password = undefined;
+
+        // Sécurité : On transforme en objet JS pour supprimer le password de la réponse
+        const guestResponse = guest.toObject();
+        //guest.toObject() : C'est plus propre que guest.password = undefined. En transformant le document Mongoose en objet simple, tu peux supprimer des champs sans risquer de modifier accidentellement la base de données.
+        delete guestResponse.password;
         //
         res.status(201).json({
             success: true,
-            data: guest
+            message: "Bienvenue sur PixelcraftHub (Mode Invité)",
+            data: guestResponse
         });
     } catch (error) {
+        console.error('❌ Erreur Guest:', error.message);
         res.status(500).json({
             success: false,
             message: 'Erreur création utilisateur invité',

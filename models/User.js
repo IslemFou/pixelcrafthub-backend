@@ -18,17 +18,17 @@ const userSchema = new mongoose.Schema({
     nom: {
         type: String,
         required: function () {
-            return this.role !== 'guest';
+            return !this.roles.includes('guest');
         }
     },
     prenom: {
         type: String, required: function () {
-            return this.role !== 'guest';
+            return !this.roles.includes('guest');
         }
     },
     telephone: {
         type: String, required: function () {
-            return this.role !== 'guest';
+            return !this.roles.includes('guest');
         }
     },
 
@@ -62,8 +62,12 @@ const userSchema = new mongoose.Schema({
 // Hash password avant sauvegarde
 userSchema.pre('save', async function () {
     if (!this.isModified('password')) return;
-    this.password = await bcrypt.hash(this.password, 12);
-    ;
+    try {
+        this.password = await bcrypt.hash(this.password, 12);
+
+    } catch (error) {
+        throw error;
+    }
 });
 
 module.exports = mongoose.model('User', userSchema);
