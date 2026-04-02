@@ -2,7 +2,7 @@ const Service = require('../models/Service.js');
 // User model is not used in this controller (was causing module resolution errors),
 // so the import has been removed. Add it back only if needed in the future.
 
-// @desc    Récupérer tous les services (recherche prestataires)
+// @desc    Get all services (search providers)
 // @route   GET /api/services
 // @access  Public
 exports.getServices = async (req, res) => {
@@ -11,29 +11,29 @@ exports.getServices = async (req, res) => {
             category,
             city,
             roomType,
-            prix_min,
-            prix_max,
-            rating_min = 0,
+            minPrice,
+            maxPrice,
+            minRating = 0,
             limit = 12,
             page = 1
-        } = req.query; // Obtenir les paramètres de la requête
-        let query = { isActive: true }; // Créer un objet de requête vide
-        // Filtres par catégorie de traveaux
+        } = req.query; // Get query parameters
+        let query = { isActive: true }; // Create an empty query object
+        // Filters by work category
         if (category) query.category = category;
-        // Filtres par pièce / type de logement
+        // Filters by room / housing type
         if (roomType) query.roomType = roomType;
-        // Filtres géo
+        // Geo filters
         if (city) query.city = { $regex: city, $options: 'i' };
 
-        //Filtres budget et note
-        if (prix_max) query.priceForm = { $lte: parseInt(prix_max) };
-        if (prix_min) query.priceForm = {
+        // Budget and rating filters
+        if (maxPrice) query.priceForm = { $lte: parseInt(maxPrice) };
+        if (minPrice) query.priceForm = {
             ...query.priceForm,
-            $gte: parseInt(prix_min)
+            $gte: parseInt(minPrice)
         };
 
-        //Filtres note
-        if (rating_min > 0) query.rating = { $gte: parseFloat(rating_min) };
+        // Rating filters
+        if (minRating > 0) query.rating = { $gte: parseFloat(minRating) };
 
         const services = await Service.find(query).populate('provider', 'companyName city rating').limit(limit).skip((page - 1) * limit).sort({ createdAt: -1 });
 
@@ -57,7 +57,7 @@ exports.getServices = async (req, res) => {
         });
     }
 };
-// @desc    Récupérer service par ID
+// @desc    Get service by ID
 // @route   GET /api/services/:id
 // @access  Public
 exports.getServiceById = async (req, res) => {
@@ -67,7 +67,7 @@ exports.getServiceById = async (req, res) => {
         if (!service) {
             return res.status(404).json({
                 success: false,
-                message: 'Service introuvable'
+                message: 'Service not found'
             });
         }
         res.json({
@@ -82,20 +82,20 @@ exports.getServiceById = async (req, res) => {
         });
     }
 }
-// @desc    Créer service (SEULS LES PRESTATAIRES)
+// @desc    Create service (PROVIDERS ONLY)
 // @route   POST /api/services
-// @access  Privé - Provider uniquement
+// @access  Private - Provider only
 exports.createService = async (req, res) => {
     try {
-        //vérifier rôle provider
+        // Check provider role
         if (!req.user.roles.includes('provider')) {
             return res.status(403).json({
                 success: false,
-                message: 'Seuls les prestataires peuvent créer des services'
+                message: 'Only providers can create services'
             });
         }
 
-        //auto-assigner le prestataire connecté
+        // Auto-assign the logged-in provider
         req.body.provider = req.user._id;
 
         const service = await Service.create(req.body);
@@ -110,37 +110,37 @@ exports.createService = async (req, res) => {
     }
 };
 
-// @desc    Modifier service (SEULS LE PROPRIÉTAIRE)
+// @desc    Update service (OWNER ONLY)
 // @route   PUT /api/services/:id
-// @access  Privé - Provider uniquement
+// @access  Private - Provider only
 exports.updateService = async (req, res) => {
     try {
         const service = await Service.findById(req.params.id);
-        // vérifier 
+        // verify
         if (!service) {
             return res.status(404).json({
-                sucess: false,
-                message: 'Service introuvable'
+                success: false,
+                message: 'Service not found'
             });
         }
-        //vérifier rôle provider
+        // Check provider role
         if (service.provider.toString() !== req.user._id.toString()) {
             return res.status(403).json({
                 success: false,
-                message: 'Non autorisé à modifier ce service'
+                message: 'Not authorized to update this service'
             });
         }
 
-        // Modifier le service
-        const updateService = await Service.findByIdAndUpdate(req.params.id,
+        // Update the service
+        const updatedService = await Service.findByIdAndUpdate(req.params.id,
             req.body,
             { new: true, runValidators: true })
             .populate('provider', 'companyName city rating');
 
         res.json({
             success: true,
-            message: 'Service modifié',
-            updateService
+            message: 'Service updated',
+            updatedService
         });
     }
     catch (error) {
@@ -151,9 +151,9 @@ exports.updateService = async (req, res) => {
     }
 };
 
-// @desc    Supprimer service (SEULS LE PROPRIÉTAIRE)
+// @desc    Delete service (OWNER ONLY)
 // @route   DELETE /api/services/:id
-// @access  Privé - Provider uniquement
+// @access  Private - Provider only
 
 exports.deleteService = async (req, res) => {
     try {
@@ -162,13 +162,13 @@ exports.deleteService = async (req, res) => {
         if (!service) {
             return res.status(404).json({
                 success: false,
-                message: 'Service introuvable'
+                message: 'Service not found'
             });
         }
         if (service.provider.toString() !== req.user._id.toString()) {
             return res.status(403).json({
                 success: false,
-                message: 'Non autorisé à supprimer ce service'
+                message: 'Not authorized to delete this service'
             });
         }
 
@@ -176,7 +176,7 @@ exports.deleteService = async (req, res) => {
 
         res.json({
             success: true,
-            message: 'Service supprimé'
+            message: 'Service deleted'
         });
     } catch (error) {
         res.status(500).json({
@@ -185,9 +185,9 @@ exports.deleteService = async (req, res) => {
         });
     }
 };
-// @desc    Mes services (dashboard prestataire)
+// @desc    My services (provider dashboard)
 // @route   GET /api/services/my-services
-// @access  Privé - Provider uniquement
+// @access  Private - Provider only
 
 exports.getMyServices = async (req, res) => {
     try {

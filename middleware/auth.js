@@ -2,14 +2,14 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
-// Génère un JWT token
+// Generate a JWT token
 const generateToken = (id) => {
     return jwt.sign({ id }, process.env.JWT_SECRET, {
         expiresIn: '7d'
     });
 };
 
-// @desc    Inscription utilisateur
+// @desc    User registration
 // @route   POST /api/auth/register
 // @access  Public
 exports.register = async (req, res) => {
@@ -17,42 +17,42 @@ exports.register = async (req, res) => {
         const {
             email,
             password,
-            nom,
-            prenom,
-            telephone,
+            firstName,
+            lastName,
+            phone,
             role,
             companyName,
             siret,
             address,
             city,
-            zoneIntervention
+            interventionZone
         } = req.body;
 
-        // Vérifier si l'utilisateur existe déjà
+        // Check if user already exists
         const existingUser = await User.findOne({ email });
         if (existingUser) {
             return res.status(400).json({
                 success: false,
-                message: 'Utilisateur déjà existant'
+                message: 'User already exists'
             });
         }
 
-        // Créer l'utilisateur
+        // Create the user
         const user = await User.create({
             email,
             password,
-            nom,
-            prenom,
-            telephone,
-            roles: role ? [role] : ['client'], // client par défaut
+            firstName,
+            lastName,
+            phone,
+            roles: role ? [role] : ['client'], // client by default
             companyName,
             siret,
             address,
             city,
-            zoneIntervention
+            interventionZone
         });
 
-        // Générer token
+        // Generate token
         const token = generateToken(user._id);
 
         res.status(201).json({
@@ -61,8 +61,8 @@ exports.register = async (req, res) => {
             user: {
                 id: user._id,
                 email: user.email,
-                nom: user.nom,
-                prenom: user.prenom,
+                firstName: user.firstName,
+                lastName: user.lastName,
                 roles: user.roles,
                 verified: user.verified,
                 companyName: user.companyName
@@ -77,32 +77,32 @@ exports.register = async (req, res) => {
     }
 };
 
-// @desc    Connexion utilisateur
+// @desc    User login
 // @route   POST /api/auth/login
 // @access  Public
 exports.login = async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        // Vérifier si l'utilisateur existe
+        // Check if user exists
         const user = await User.findOne({ email }).select('+password');
         if (!user) {
             return res.status(401).json({
                 success: false,
-                message: 'Email ou mot de passe incorrect'
+                message: 'Incorrect email or password'
             });
         }
 
-        // Vérifier le mot de passe
+        // Check password
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
             return res.status(401).json({
                 success: false,
-                message: 'Email ou mot de passe incorrect'
+                message: 'Incorrect email or password'
             });
         }
 
-        // Générer token
+        // Generate token
         const token = generateToken(user._id);
 
         res.json({
@@ -111,7 +111,7 @@ exports.login = async (req, res) => {
             user: {
                 id: user._id,
                 email: user.email,
-                nom: `${user.nom} ${user.prenom}`,
+                name: `${user.firstName} ${user.lastName}`,
                 roles: user.roles,
                 verified: user.verified,
                 companyName: user.companyName,
@@ -127,9 +127,9 @@ exports.login = async (req, res) => {
     }
 };
 
-// @desc    Récupérer profil utilisateur
+// @desc    Get user profile
 // @route   GET /api/auth/profile
-// @access  Privé
+// @access  Private
 exports.profile = async (req, res) => {
     try {
         const user = await User.findById(req.user.id)
@@ -148,22 +148,22 @@ exports.profile = async (req, res) => {
     }
 };
 
-// @desc    Modifier profil
+// @desc    Update profile
 // @route   PUT /api/auth/profile
-// @access  Privé
+// @access  Private
 exports.updateProfile = async (req, res) => {
     try {
         const updates = {
-            nom: req.body.nom,
-            prenom: req.body.prenom,
-            telephone: req.body.telephone,
+            firstName: req.body.firstName,
+            lastName: req.body.lastName,
+            phone: req.body.phone,
             address: req.body.address,
             city: req.body.city,
             postalCode: req.body.postalCode,
-            zoneIntervention: req.body.zoneIntervention
+            interventionZone: req.body.interventionZone
         };
 
-        // Champs pros (vendor/provider)
+        // Pro fields (vendor/provider)
         if (req.body.companyName) updates.companyName = req.body.companyName;
         if (req.body.siret) updates.siret = req.body.siret;
 
@@ -245,28 +245,28 @@ exports.authorize = (...roles) => {
     };
 };
 
-// @desc    Demander vérification pro
+// @desc    Request pro verification
 // @route   POST /api/auth/verify-request
-// @access  Privé (vendor/provider uniquement)
+// @access  Private (vendor/provider only)
 exports.requestVerification = async (req, res) => {
     try {
-        // Vérifier si c'est un pro
+        // Check if pro
         if (!req.user.roles.includes('vendor') && !req.user.roles.includes('provider')) {
             return res.status(403).json({
                 success: false,
-                message: 'Seuls les vendeurs/prestataires peuvent demander une vérification'
+                message: 'Only sellers/providers can request verification'
             });
         }
 
-        // Vérifier si déjà vérifié
+        // Check if already verified
         if (req.user.verified) {
             return res.status(400).json({
                 success: false,
-                message: 'Déjà vérifié'
+                message: 'Already verified'
             });
         }
 
-        // TODO: Envoyer email admin + pièces jointes
+        // TODO: Send admin email + attachments
         const user = await User.findByIdAndUpdate(
             req.user.id,
             { verificationRequested: true },
@@ -275,7 +275,7 @@ exports.requestVerification = async (req, res) => {
 
         res.json({
             success: true,
-            message: 'Demande de vérification envoyée'
+            message: 'Verification request sent'
         });
 
     } catch (error) {

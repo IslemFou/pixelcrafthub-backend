@@ -35,37 +35,37 @@ exports.createGuestUser = async (req, res) => {
     try {
         const randomSuffix = crypto.randomBytes(4).toString('hex');
         const guest = await User.create({
-            nom: `Guest-${randomSuffix}`,
-            prenom: randomSuffix,
+            firstName: `Guest-${randomSuffix}`,
+            lastName: randomSuffix,
             email: `guest_${Date.now()}@pixelcrafthub.com`,
             password: 'test1234',
             roles: ['guest'],
             isVerified: false
         });
 
-        // Sécurité : On transforme en objet JS pour supprimer le password de la réponse
+        // Security: Convert to JS object to remove password from response
         const guestResponse = guest.toObject();
-        //guest.toObject() : C'est plus propre que guest.password = undefined. En transformant le document Mongoose en objet simple, tu peux supprimer des champs sans risquer de modifier accidentellement la base de données.
+        // guest.toObject(): It's cleaner than guest.password = undefined. By converting the Mongoose document to a simple object, you can remove fields without risking accidental database modification.
         delete guestResponse.password;
         //
         res.status(201).json({
             success: true,
-            message: "Bienvenue sur PixelcraftHub (Mode Invité)",
+            message: "Welcome to PixelcraftHub (Guest Mode)",
             data: guestResponse
         });
     } catch (error) {
-        console.error('❌ Erreur Guest:', error.message);
+        console.error('❌ Guest Error:', error.message);
         res.status(500).json({
             success: false,
-            message: 'Erreur création utilisateur invité',
+            message: 'Error creating guest user',
             error: error.message
         });
     }
 }
 
-// @desc    Récupérer tous les utilisateurs (admin uniquement)
+// @desc    Get all users (admin only)
 // @route   GET /api/users
-// @access  Privé - Admin
+// @access  Private - Admin
 exports.getUsers = async (req, res) => {
     try {
         const users = await User.find()
@@ -84,14 +84,14 @@ exports.getUsers = async (req, res) => {
     }
 };
 
-// @desc    Récupérer utilisateur par ID
+// @desc    Get user by ID
 // @route   GET /api/users/:id
-// @access  Privé - Admin
+// @access  Private - Admin
 exports.getUserById = async (req, res) => {
     try {
         const user = await User.findById(req.params.id).select('-password');
         if (!user) {
-            return res.status(404).json({ message: 'Utilisateur non trouvé' });
+            return res.status(404).json({ message: 'User not found' });
         }
         res.json({
             success: true,
@@ -101,9 +101,9 @@ exports.getUserById = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
-// @desc    Modifier utilisateur (admin)
+// @desc    Update user (admin)
 // @route   PUT /api/users/:id
-// @access  Privé - Admin
+// @access  Private - Admin
 exports.updateUser = async (req, res) => {
     try {
         const user = await User.findByIdAndUpdate(
@@ -122,9 +122,9 @@ exports.updateUser = async (req, res) => {
     }
 };
 
-// @desc    Vérifier prestataire/vendeur (admin)
+// @desc    Verify provider/seller (admin)
 // @route   PUT /api/users/:id/verify
-// @access  Privé - Admin
+// @access  Private - Admin
 exports.verifyUser = async (req, res) => {
     try {
         const user = await User.findByIdAndUpdate(
@@ -135,7 +135,7 @@ exports.verifyUser = async (req, res) => {
 
         res.json({
             success: true,
-            message: `${user.companyName} vérifié`,
+            message: `${user.companyName} verified`,
             user
         });
     } catch (error) {
@@ -143,13 +143,13 @@ exports.verifyUser = async (req, res) => {
     }
 };
 
-// @desc    Supprimer utilisateur (admin)
+// @desc    Delete user (admin)
 // @route   DELETE /api/users/:id
-// @access  Privé - Admin
+// @access  Private - Admin
 exports.deleteUser = async (req, res) => {
     try {
         await User.findByIdAndDelete(req.params.id);
-        res.json({ success: true, message: 'Utilisateur supprimé' });
+        res.json({ success: true, message: 'User deleted' });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

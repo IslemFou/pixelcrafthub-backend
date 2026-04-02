@@ -4,29 +4,29 @@ const bcrypt = require('bcryptjs');
 const userSchema = new mongoose.Schema({
     email: {
         type: String,
-        required: [true, 'Email requis'],
+        required: [true, 'Email required'],
         unique: true,
         lowercase: true,
         trim: true,
-        match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Email invalide']
+        match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Invalid email']
     },
     password: {
         type: String,
-        required: [true, 'Mot de passe requis'],
+        required: [true, 'Password required'],
         minlength: 6
     },
-    nom: {
+    firstName: {
         type: String,
         required: function () {
             return !this.roles.includes('guest');
         }
     },
-    prenom: {
+    lastName: {
         type: String, required: function () {
             return !this.roles.includes('guest');
         }
     },
-    telephone: {
+    phone: {
         type: String, required: function () {
             return !this.roles.includes('guest');
         }
@@ -35,31 +35,31 @@ const userSchema = new mongoose.Schema({
     // roles
     roles: [{
         type: String,
-        enum: ['client', 'prestataire', 'admin', 'guest'],
+        enum: ['client', 'provider', 'admin', 'guest'],
         default: ['guest']
     }],
 
-    //  Infos pro (prestataires)
+    // Pro info (providers)
     companyName: { type: String },
     siret: {
         type: String,
-        match: [/^[0-9]{14}$/, 'SIRET invalide'],
+        match: [/^[0-9]{14}$/, 'Invalid SIRET'],
         unique: true,
-        sparse: true //Permet d'avoir plusieurs utilisateurs sans SIRET
+        sparse: true //Allows multiple users without SIRET
     },
     address: String,
     city: String,
     postalCode: String,
-    zoneIntervention: [String], // ['Paris', '92', '93']
+    interventionZone: [String], // ['Paris', '92', '93']
     verified: { type: Boolean, default: false },
 
-    // Anciens champs (tu les gardes)
+    // Old fields (keep them)
     isAdmin: { type: Boolean, default: false }
 }, {
     timestamps: true
 });
 
-// Hash password avant sauvegarde
+// Hash password before saving
 userSchema.pre('save', async function () {
     if (!this.isModified('password')) return;
     try {

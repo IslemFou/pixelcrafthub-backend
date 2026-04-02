@@ -1,91 +1,176 @@
-const Project = require('../models/Projets');
+const Project = require('../models/Projects');
 const Quote = require('../models/Quote');
-const User = require('../models/User');
 
-// @desc    Créer projet (client demande travaux)
+// @desc    Create project (client requests works)
 // @route   POST /api/projects
-// @access  Privé - Client
-/*
-Cette fonction permet à un client connecté de créer une nouvelle demande de projet/travaux. L'API s'assure que le client est bien l'utilisateur connecté.
-*/
 exports.createProject = async (req, res) => {
     try {
         req.body.client = req.user._id;
-        //Assigne automatiquement l'ID de l'utilisateur connecté comme client du projet. Cela garantit qu'un client ne peut créer un projet que pour lui-même.
         const project = await Project.create(req.body);
-        //Crée un nouveau projet en base de données avec les données envoyées dans le corps de la requête (titre, description, etc.).
 
-        res.status(201).json({ success: true, project }); //Retourne la réponse avec le statut 201 (Created) et les détails du projet créé.
-
+        res.status(201).json({
+            success: true,
+            message: "Project created successfully",
+            data: project
+        });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(400).json({ success: false, message: error.message });
     }
 };
 
-// @desc    Récupérer mes projets (client)
-// @route   GET /api/projects/my-projects
-// @access  Privé
-exports.getMyProjects = async (req, res) => {
+// @desc    Get projects (Filtered by user role)
+// @route   GET /api/projects
+exports.getProjects = async (req, res) => {
     try {
-        const projects = await Project.find({ client: req.user._id })
+        let filter = {};
+
+        // SECURITY FIX: Apply the filter based on roles
+        if (req.user.roles.includes('client')) {
+            filter.client = req.user._id;
+        } else if (req.user.roles.includes('provider')) {
+            filter = {
+                $or: [
+                    { developer: req.user._id },
+                    { status: 'planning' } // Providers can see available projects
+                ]
+            };
+        }
+
+        const projects = await Project.find(filter) // Use the filter here!
+            .populate('client', 'firstName lastName')
+            .populate('developer', 'firstName lastName companyName')
             .populate({
                 path: 'quotes',
                 populate: { path: 'provider', select: 'companyName rating' }
             })
             .sort({ createdAt: -1 });
 
-        res.json({ success: true, projects });
+        res.status(200).json({ success: true, count: projects.length, data: projects });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ success: false, error: error.message });
     }
 };
-// @desc    Projets ouverts (prestataires)
-// @route   GET /api/projects
-// @access  Public / Privé - Provider
-exports.getOpenProjects = async (req, res) => {
+
+// getProject // Details
+// un utilisateur ne peut voir les détails d'un projet que s'il est le Client, le Developer, ou un Admin.
+// @desc    Get single project details
+// @route   GET /api/projects/:id
+// @access  Private (Involved parties only)
+exports.getProject = async (req, res) => {
     try {
-        const {
-            city, category, limit = 20
-        } = req.query;
+        const project = await Project.findById(req.params.id)
+            .populate('client', 'firstName lastName email')
+            .populate('developer', 'firstName lastName companyName email')
+            .populate('service', 'title category')
+            .populate('order', 'totalPrice paymentStatus')
+            .populate('quotes');
 
-        let query = { status: 'ouvert' };
-        if (city) query.city = { $regex: city, $options: 'i' };
+        if (!project) {
+            return res.status(404).json({
+                success: false,
+                message: 'Project not found'
+            });
+        }
 
-        const projects = await Project.find(query)
-            .populate('client', 'nom prenom')
-            .limit(parseInt(limit))
-            .sort({ createdAt: -1 });
+        // --- SECURITY CHECK ---
+        const isAdmin = req.user.roles.includes('admin');
+        const isClient = project.client._id.toString() === req.user._id.toString();
+        const isDev = project.developer && project.developer._id.toString() === req.user._id.toString();
 
-        res.json({ success: true, projects });
+        if (!isAdmin && !isClient && !isDev) {
+            return res.status(403).json({
+                success: false,
+                message: 'Not authorized to view this project'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            data: project
+        });
+
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ success: false, error: error.message });
     }
 };
-// @desc    Mettre à jour statut projet
+
+// @desc    Update project status or progress
 // @route   PUT /api/projects/:id
-// @access  Privé
-exports.updateProjectStatus = async (req, res) => {
+exports.updateProject = async (req, res) => {
+    try {
+        const { status, progress, repositoryUrl, stagingUrl } = req.body;
+        let project = await Project.findById(req.params.id);
+
+        if (!project) {
+            return res.status(404).json({ success: false, message: 'Project not found' });
+        }
+        // Authorization check
+        const isClient = project.client.toString() === req.user._id.toString();
+        const isDev = project.developer && project.developer.toString() === req.user._id.toString();
+
+        if (!isClient && !isDev) {
+            return res.status(403).json({ success: false, message: 'Not authorized' });
+        }
+
+        // Prepare update object
+        const updateData = {};
+        if (status) updateData.status = status;
+        if (progress !== undefined) updateData.progress = progress;
+        if (repositoryUrl) updateData.repositoryUrl = repositoryUrl;
+        if (stagingUrl) updateData.stagingUrl = stagingUrl;
+
+        project = await Project.findByIdAndUpdate(
+            req.params.id,
+            updateData,
+            { new: true, runValidators: true }
+        );
+
+        res.json({ success: true, data: project });
+    } catch (error) {
+        res.status(400).json({ success: false, message: error.message });
+    }
+};
+
+// @desc    Delete a project
+// @route   DELETE /api/projects/:id
+// @access  Private (Admin or Owner)
+exports.deleteProject = async (req, res) => {
     try {
         const project = await Project.findById(req.params.id);
 
         if (!project) {
-            return res.status(404).json({ success: false, message: 'Projet introuvable' });
+            return res.status(404).json({
+                success: false,
+                message: 'Project not found'
+            });
         }
 
-        // Authorization check: Only the project's client can update it.
-        if (project.client.toString() !== req.user._id.toString()) {
-            return res.status(403).json({ success: false, message: 'Action non autorisée.' });
+        // Security check: Only an Admin or the Client who created it can delete
+        const isAdmin = req.user.roles.includes('admin');
+        const isOwner = project.client.toString() === req.user._id.toString();
+
+        if (!isAdmin && !isOwner) {
+            return res.status(403).json({
+                success: false,
+                message: 'Not authorized to delete this project'
+            });
         }
 
-        const updatedProject = await Project.findByIdAndUpdate(
-            req.params.id,
-            { status: req.body.status }, // Only allow updating the status
-            { new: true, runValidators: true }
-        ).populate('client', 'nom prenom');
+        // Logic: If the project is already "in_progress", maybe prevent deletion?
+        if (project.status === 'development' && !isAdmin) {
+            return res.status(400).json({
+                success: false,
+                message: 'Cannot delete a project already in development. Please cancel it instead.'
+            });
+        }
 
-        res.json({ success: true, project: updatedProject });
+        await project.deleteOne();
 
+        res.status(200).json({
+            success: true,
+            message: 'Project removed from PixelcraftHub'
+        });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ success: false, error: error.message });
     }
 };

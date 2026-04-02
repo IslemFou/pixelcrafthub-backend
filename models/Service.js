@@ -1,80 +1,56 @@
 const mongoose = require('mongoose');
 
 const serviceSchema = new mongoose.Schema({
-    // Prestataire qui propose le service
+    // Provider offering the service
     provider: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: true
     },
 
-    // Nom du service
+    // Service name
     title: {
         type: String,
-        required: [true, 'Titre du service requis'],
+        required: [true, 'Service title is required'],
         maxlength: 200
     },
 
-    // Description détaillée
+    // Detailed description
     description: {
         type: String,
-        required: [true, 'Description requise'],
+        required: [true, 'Description is required'],
         maxlength: 2000
     },
 
-    // Catégorie de travaux / déco
+    // Service category
     category: {
         type: String,
-        enum: [
-            'peinture',
-            'renovation_complete',
-            'cuisine',
-            'salle_de_bain',
-            'menuiserie',
-            'electricite',
-            'plomberie',
-            'amenagement_interieur',
-            'decoration',
-            'montage_meubles',
-            'autre'
+        enum: ['Graphic Design',
+            'UI/UX Design',
+            'Web Development', 'Digital Marketing', 'Content Writing',
+            'Handcraft',
+            'Marketing',
+            'Consulting',
+            'Other'
         ],
         required: true
     },
 
-    // Type de logement / pièce ciblé
-    roomTypes: [{
-        type: String,
-        enum: [
-            'salon',
-            'chambre',
-            'cuisine',
-            'salle_bain',
-            'bureau',
-            'exterieur',
-            'appartement',
-            'maison'
-        ]
-    }],
-
-    // Zone géographique
-    city: {
-        type: String,
-        required: true
-    },
-    postalCode: String,
-    zones: [String], // ex: ['Paris', '92', '93']
-
-    // Tarification
+    // Pricing
     pricingType: {
         type: String,
-        enum: ['forfait', 'horaire', 'sur_devis'],
-        default: 'sur_devis'
+        enum: ['Fixed', 'Hourly', 'Quote'],
+        default: 'Quote'
     },
-    priceFrom: { type: Number, min: 0 }, // prix indicatif
+    priceFrom: {
+        type: Number,
+        min: 0,
+        default: 0
+    },
     priceUnit: {
         type: String,
-        enum: ['prestation', 'heure', 'm2'],
-        default: 'prestation'
+        enum: ['per_project', 'per_hour', 'per_day', 'per_item'],
+        default: 'per_project'
     },
 
     // Durée indicative
@@ -86,18 +62,19 @@ const serviceSchema = new mongoose.Schema({
 
     // Expérience & tags
     experienceYears: { type: Number, min: 0 },
-    tags: [String], // ex: ['scandinave', 'bois', 'eco', 'minimaliste']
+    tags: {
+        type: [String],
+        lowercase: true
+    },
 
-    // Notes & statut
-    rating: { type: Number, default: 0, min: 0, max: 5 },
-    reviewsCount: { type: Number, default: 0 },
+    //  Availability
     isActive: { type: Boolean, default: true },
 }, {
     timestamps: true
 });
 
 // Index utiles pour la recherche
-serviceSchema.index({ city: 1, category: 1 });
+serviceSchema.index({ category: 1 });
 serviceSchema.index({ provider: 1, isActive: 1 });
 
 module.exports = mongoose.model('Service', serviceSchema);
