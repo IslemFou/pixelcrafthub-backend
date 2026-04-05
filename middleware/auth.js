@@ -2,7 +2,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
-// Generate a JWT token
+// Generate a JWT token containing the user's ID and uses a secret key from environnment variables process.env.JWT_SECRET for security. This token expires in 7 days.
 const generateToken = (id) => {
     return jwt.sign({ id }, process.env.JWT_SECRET, {
         expiresIn: '7d'
@@ -12,6 +12,15 @@ const generateToken = (id) => {
 // @desc    User registration
 // @route   POST /api/auth/register
 // @access  Public
+/*
+Route Handler:
+Purpose: Lets new users sign up.
+Extracts user details from the request body (e.g., email, password).
+Checks if a user with that email already exists.
+Creates a new user in the database (password gets hashed automatically by the User model).
+Generates a JWT token and sends it back with user info.
+If something fails (e.g., database error), returns an error message.
+*/
 exports.register = async (req, res) => {
     try {
         const {
@@ -25,7 +34,8 @@ exports.register = async (req, res) => {
             siret,
             address,
             city,
-            interventionZone
+            postalCode,
+            lang,
         } = req.body;
 
         // Check if user already exists
@@ -49,7 +59,8 @@ exports.register = async (req, res) => {
             siret,
             address,
             city,
-            interventionZone
+            postalCode,
+            lang
         });
 
         // Generate token
@@ -160,7 +171,7 @@ exports.updateProfile = async (req, res) => {
             address: req.body.address,
             city: req.body.city,
             postalCode: req.body.postalCode,
-            interventionZone: req.body.interventionZone
+            lang: req.body.lang
         };
 
         // Pro fields (vendor/provider)

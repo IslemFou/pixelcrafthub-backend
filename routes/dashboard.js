@@ -12,10 +12,8 @@ const router = express.Router();
 //Client
 router.get('/client', protect, authorize('client'), dashboardClient);
 
-//Vendor (vendeur meubles/déco)
-router.get('/vendor', protect, authorize('vendor'), dashboardVendor);
 
-//Providor (prestataire traveaux)
+//Providor (prestataire )
 router.get('/provider', protect, authorize('provider'), dashboardProvider);
 
 //Admin global

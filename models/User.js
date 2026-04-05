@@ -50,7 +50,11 @@ const userSchema = new mongoose.Schema({
     address: String,
     city: String,
     postalCode: String,
-    interventionZone: [String], // ['Paris', '92', '93']
+    lang: {
+        type: String,
+        enum: ['en', 'fr', 'ar', 'other'],
+        default: 'en'
+    },
     verified: { type: Boolean, default: false },
 
     // Old fields (keep them)
