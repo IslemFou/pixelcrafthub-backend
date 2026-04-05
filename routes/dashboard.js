@@ -1,7 +1,6 @@
 const express = require('express');
 const {
     dashboardClient,
-    dashboardVendor,
     dashboardProvider,
     dashboardAdmin
 } = require('../controllers/dashboardController');
