@@ -1,34 +1,25 @@
 const express = require('express');
+const router = express.Router();
 const {
     createOrder,
     getMyOrders,
-    getSellerOrders,
-    updateOrderStatus
+    getProviderOrders,
+    updateOrderToPaid
 } = require('../controllers/orderController');
+
+//On importe le vigile
 const { protect, authorize } = require('../middleware/auth');
 
-const router = express.Router();
+//------------- Toutes les routes ci-dessous nécessitent d'être connecté
+router.use(protect);
 
-//Créer une commande (client)
-router.post('/', protect, createOrder);
+router.route('/')
+    .post(authorize('client'), createOrder) //seul un client achète
+    .get(getMyOrders);   // voir ses propres commandes
 
-//Mes commandes (client)
-router.get('/my-orders', protect, getMyOrders);
+router.get('/provider', authorize('provider'), getProviderOrders); //// Voir ses ventes
 
-//Commandes pour vendeur / prestataires
-router.get(
-    '/my-seller-orders',
-    protect,
-    authorize('vendor', 'provider'),
-    getSellerOrders
-);
+router.put('/:id/pay', authorize('client'), updateOrderToPaid); // Simuler le paiement
 
-//Mettre à jour status commande (vendor/provider)
-router.put(
-    '/:id',
-    protect,
-    authorize('vendor', 'provider', 'admin'),
-    updateOrderStatus
-);
 
 module.exports = router;
