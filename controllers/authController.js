@@ -17,9 +17,9 @@ exports.register = async (req, res) => {
         const {
             email,
             password,
-            nom,
-            prenom,
-            telephone,
+            firstName,
+            lastName,
+            phone,
             role,
             companyName,
             siret,
@@ -41,15 +41,12 @@ exports.register = async (req, res) => {
         const user = await User.create({
             email,
             password,
-            nom,
-            prenom,
-            telephone,
+            firstName,
+            lastName,
+            phone,
             roles: role ? [role] : ['client'], // client par défaut
             companyName,
-            siret,
-            address,
-            city,
-            zoneIntervention
+            siret
         });
 
         // Générer token
@@ -61,8 +58,8 @@ exports.register = async (req, res) => {
             user: {
                 id: user._id,
                 email: user.email,
-                nom: user.nom,
-                prenom: user.prenom,
+                firstName: user.firstName,
+                lastName: user.lastName,
                 roles: user.roles,
                 verified: user.verified,
                 companyName: user.companyName
@@ -111,7 +108,7 @@ exports.login = async (req, res) => {
             user: {
                 id: user._id,
                 email: user.email,
-                nom: `${user.nom} ${user.prenom}`,
+                name: `${user.firstName} ${user.lastName}`,
                 roles: user.roles,
                 verified: user.verified,
                 companyName: user.companyName,
@@ -154,9 +151,9 @@ exports.profile = async (req, res) => {
 exports.updateProfile = async (req, res) => {
     try {
         const updates = {
-            nom: req.body.nom,
-            prenom: req.body.prenom,
-            telephone: req.body.telephone,
+            lastName: req.body.lastName,
+            firstName: req.body.firstName,
+            phone: req.body.phone,
             address: req.body.address,
             city: req.body.city,
             postalCode: req.body.postalCode,
