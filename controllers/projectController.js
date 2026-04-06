@@ -1,4 +1,4 @@
-const Project = require('../models/Projects');
+const Project = require('../models/Project');
 const Quote = require('../models/Quote');
 
 // @desc    Create project (client requests works)

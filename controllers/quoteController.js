@@ -1,5 +1,5 @@
 const Quote = require('../models/Quote');
-const Project = require('../models/Projets');
+const Project = require('../models/Project');
 // @desc    Créer devis (prestataire → projet client)
 // @route   POST /api/quotes
 // @access  Privé - Provider

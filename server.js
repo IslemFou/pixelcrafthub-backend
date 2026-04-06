@@ -26,8 +26,7 @@ const dashboardRoutes = require('./routes/dashboard.js');
 const orderRoutes = require('./routes/orders.js');
 const quoteRoutes = require('./routes/quotes.js');
 const userRoutes = require('./routes/users.js');
-const productRoutes = require('./routes/products.js');
-app.use('/api/products', productRoutes);  // Préfixe automatique !
+
 const serviceRoutes = require('./routes/services');
 app.use('/api/services', serviceRoutes);
 app.use('/api/auth', authRoutes);
