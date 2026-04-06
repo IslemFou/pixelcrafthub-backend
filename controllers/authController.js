@@ -21,11 +21,7 @@ exports.register = async (req, res) => {
             lastName,
             phone,
             role,
-            companyName,
-            siret,
-            address,
-            city,
-            zoneIntervention
+            siret
         } = req.body;
 
         // Vérifier si l'utilisateur existe déjà
@@ -33,9 +29,12 @@ exports.register = async (req, res) => {
         if (existingUser) {
             return res.status(400).json({
                 success: false,
-                message: 'Utilisateur déjà existant'
+                message: 'User already exist'
             });
         }
+        // NETTOYAGE DU SIRET
+        // On transforme une chaîne vide en undefined pour éviter le conflit d'index unique
+        const cleanSiret = (siret && siret.trim() !== "") ? siret : undefined;
 
         // Créer l'utilisateur
         const user = await User.create({
@@ -44,8 +43,7 @@ exports.register = async (req, res) => {
             firstName,
             lastName,
             phone,
-            roles: role ? [role] : ['client'], // client par défaut
-            companyName,
+            roles,
             siret
         });
 
