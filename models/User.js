@@ -56,7 +56,8 @@ const userSchema = new mongoose.Schema({
         match: [/^[0-9]{14}$/, 'Invalid SIRET'],
         unique: true,
         sparse: true,
-        required: false
+        required: false,
+        set: v => (v === "" || v === null || !v) ? undefined : v
     },
     address: String,
     city: String,

@@ -36,40 +36,39 @@ exports.register = async (req, res) => {
             });
         }
 
-        // 2. NETTOYAGE DU SIRET
-        const cleanSiret = (siret && siret.trim() !== "") ? siret : undefined;
-
-        // 3. Créer l'utilisateur
-        console.log("3. Tentative de User.create...");
-        const user = await User.create({
+        // 2. PRÉPARATION DE L'OBJET (Le secret est ici)
+        const userData = {
             email,
             password,
             firstName,
             lastName,
             phone,
-            roles: [role], // CORRECTED: On transforme "role" en tableau [role]
-            siret: cleanSiret, // CORRECTED: On utilise la variable nettoyée
+            roles: [role],
             companyName
-        });
+        };
 
-        console.log("4. Utilisateur créé en mémoire (ID):", user._id);
-        // 4. Générer token
+        // On ajoute le SIRET SEULEMENT s'il n'est pas vide
+        if (siret && siret.trim() !== "") {
+            userData.siret = siret.trim();
+        }
+
+        // 3. Créer l'utilisateur avec l'objet propre
+        console.log("3. Tentative de User.create avec :", userData);
+        const user = await User.create(userData);
+
+        console.log("4. Utilisateur créé ID:", user._id);
+
         const token = generateToken(user._id);
-        console.log("5. Token généré, envoi de la réponse 201");
-
         res.status(201).json({
             success: true,
             token,
             user: {
                 id: user._id,
                 email: user.email,
-                firstName: user.firstName,
-                lastName: user.lastName,
-                roles: user.roles,
-                verified: user.verified,
-                companyName: user.companyName
+                roles: user.roles
             }
         });
+
 
     } catch (error) {
         console.error("❌ ERREUR CATCHÉE :", error.message);
