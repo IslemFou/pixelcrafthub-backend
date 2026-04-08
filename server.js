@@ -18,6 +18,11 @@ const app = express(); //création du server express
 
 // middleware
 app.use(cors()); // Autorise React (port 3000) et API Node.js (port 5000) à communiquer entre eux
+app.use(cors({
+    origin: 'http://localhost:5173', // L'URL précise de ton Front Vite
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    credentials: true
+}));
 app.use(express.json()); // Transforme JSON des requêtes POST en objet JS 
 
 //-------- Routes 

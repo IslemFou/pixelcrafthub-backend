@@ -3,15 +3,15 @@ const mongoose = require('mongoose');
 // 1. DÉFINITION DU SOUS-SCHÉMA (Les items de la commande)
 const orderItemSchema = new mongoose.Schema({
     title: { type: String, required: true },
-    service: { type: mongoose.Schema.Types.ObjectId, ref: 'service', required: true },
+    service: { type: mongoose.Schema.Types.ObjectId, ref: 'Service', required: true },
     quote: { type: mongoose.Schema.Types.ObjectId, ref: 'Quote', required: true },
-    client: { type: mongoose.Schema.ObjectId, ref: 'User', required: true },
+    client: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     provider: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     totalPrice: { type: Number, required: true },
     currency: { type: String, default: 'EUR' },
     paymentMethod: {
         type: String,
-        enum: ['stripe', 'paypal', 'bank_transfer'],
+        enum: ['stripe', 'paypal', 'bank_transfer', 'card', 'cash'],
         default: 'stripe'
     },
     isPaid: { type: Boolean, default: false },
@@ -38,7 +38,7 @@ const orderSchema = new mongoose.Schema({
     totalPrice: { type: Number, required: true, min: 0 },
     paymentMethod: {
         type: String,
-        enum: ['card', 'paypal', 'stripe', 'cash'],
+        enum: ['stripe', 'paypal', 'bank_transfer', 'card', 'cash'],
         default: 'card'
     },
     paymentResult: {

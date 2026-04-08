@@ -174,7 +174,7 @@ exports.updateProfile = async (req, res) => {
             lang: req.body.lang
         };
 
-        // Pro fields (vendor/provider)
+        // Pro fields (company)
         if (req.body.companyName) updates.companyName = req.body.companyName;
         if (req.body.siret) updates.siret = req.body.siret;
 

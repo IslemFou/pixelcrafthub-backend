@@ -13,6 +13,7 @@ const generateToken = (id) => {
 // @route   POST /api/auth/register
 // @access  Public
 exports.register = async (req, res) => {
+    console.log("1. Requête reçue avec le body:", req.body);
     try {
         const {
             email,
@@ -20,35 +21,41 @@ exports.register = async (req, res) => {
             firstName,
             lastName,
             phone,
-            role,
-            siret
+            role,   // On récupère "role" du front
+            siret,
+            companyName // N'oublie pas de le récupérer aussi !
         } = req.body;
 
-        // Vérifier si l'utilisateur existe déjà
+        // 1. Vérifier si l'utilisateur existe déjà
         const existingUser = await User.findOne({ email });
+        console.log("2. Utilisateur existe déjà ?", !!existingUser);
         if (existingUser) {
             return res.status(400).json({
                 success: false,
-                message: 'User already exist'
+                message: 'User already exists'
             });
         }
-        // NETTOYAGE DU SIRET
-        // On transforme une chaîne vide en undefined pour éviter le conflit d'index unique
+
+        // 2. NETTOYAGE DU SIRET
         const cleanSiret = (siret && siret.trim() !== "") ? siret : undefined;
 
-        // Créer l'utilisateur
+        // 3. Créer l'utilisateur
+        console.log("3. Tentative de User.create...");
         const user = await User.create({
             email,
             password,
             firstName,
             lastName,
             phone,
-            roles,
-            siret
+            roles: [role], // CORRECTED: On transforme "role" en tableau [role]
+            siret: cleanSiret, // CORRECTED: On utilise la variable nettoyée
+            companyName
         });
 
-        // Générer token
+        console.log("4. Utilisateur créé en mémoire (ID):", user._id);
+        // 4. Générer token
         const token = generateToken(user._id);
+        console.log("5. Token généré, envoi de la réponse 201");
 
         res.status(201).json({
             success: true,
@@ -65,6 +72,9 @@ exports.register = async (req, res) => {
         });
 
     } catch (error) {
+        console.error("❌ ERREUR CATCHÉE :", error.message);
+        console.error("❌ STACKTRACE :", error.stack);
+        console.error("DETAILED REGISTER ERROR:", error); // Ajoute ce log pour voir l'erreur exacte dans ta console terminal
         res.status(500).json({
             success: false,
             message: error.message
@@ -75,6 +85,8 @@ exports.register = async (req, res) => {
 // @desc    Connexion utilisateur
 // @route   POST /api/auth/login
 // @access  Public
+/* is an asynchronous Express.js route handler that authenticates a user based on their email and password. It follows a standard authentication flow for a web API.
+*/
 exports.login = async (req, res) => {
     try {
         const { email, password } = req.body;
