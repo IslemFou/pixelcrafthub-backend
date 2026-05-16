@@ -121,7 +121,6 @@ exports.login = async (req, res) => {
                 roles: user.roles,
                 verified: user.verified,
                 companyName: user.companyName,
-                city: user.city
             }
         });
 
